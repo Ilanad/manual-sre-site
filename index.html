@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Manual SRE™ — Artisanal Infrastructure Care</title>
+<meta content="Manual SRE is perfect for those that ignore the shortcuts, and embrace the grind." name="description"/>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@300;400;500;600;700;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔧</text></svg>"/>
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "tertiary-fixed":              "#ffd33a",
+          "surface-container-highest":   "#dbdddd",
+          "on-primary-fixed":            "#180800",
+          "surface-container-lowest":    "#ffffff",
+          "surface-container-high":      "#e1e3e3",
+          "background":                  "#f6f6f6",
+          "secondary-container":         "#e5e2e1",
+          "primary-fixed":               "#fd8b00",
+          "on-secondary-fixed":          "#403f3f",
+          "on-primary":                  "#fff0e7",
+          "on-background":               "#2d2f2f",
+          "surface-bright":              "#f6f6f6",
+          "tertiary-dim":                "#614d00",
+          "tertiary":                    "#6f5900",
+          "primary-dim":                 "#7b4000",
+          "on-secondary":                "#f5f2f1",
+          "secondary-fixed":             "#e5e2e1",
+          "secondary-dim":               "#504f4f",
+          "on-tertiary-fixed":           "#453600",
+          "on-surface-variant":          "#5a5c5c",
+          "secondary":                   "#5c5b5b",
+          "primary-container":           "#fd8b00",
+          "on-tertiary-fixed-variant":   "#675200",
+          "on-secondary-container":      "#525151",
+          "inverse-primary":             "#fd8b00",
+          "surface-container":           "#e7e8e8",
+          "primary":                     "#8c4a00",
+          "surface-variant":             "#dbdddd",
+          "on-surface":                  "#2d2f2f",
+          "on-tertiary-container":       "#5c4900",
+          "surface":                     "#f6f6f6",
+          "tertiary-fixed-dim":          "#efc52b",
+          "on-primary-fixed-variant":    "#512800",
+          "error-container":             "#f95630",
+          "secondary-fixed-dim":         "#d6d4d3",
+          "outline":                     "#767777",
+          "on-error-container":          "#520c00",
+          "inverse-on-surface":          "#9c9d9d",
+          "on-secondary-fixed-variant":  "#5c5b5b",
+          "error":                       "#b02500",
+          "surface-tint":                "#8c4a00",
+          "on-primary-container":        "#442100",
+          "tertiary-container":          "#ffd33a",
+          "surface-container-low":       "#f0f1f1",
+          "surface-dim":                 "#d3d5d5",
+          "on-error":                    "#ffefec",
+          "primary-fixed-dim":           "#ea8000",
+          "inverse-surface":             "#0c0f0f",
+          "on-tertiary":                 "#fff2d3",
+          "outline-variant":             "#acadad",
+          "error-dim":                   "#b92902"
+        },
+        fontFamily: {
+          "headline": ["Space Grotesk"],
+          "body":     ["Inter"],
+          "label":    ["Space Grotesk"]
+        },
+        borderRadius: { "DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "0px" },
+      },
+    },
+  }
+</script>
+<style>
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+  .noise-overlay { position: relative; }
+  .noise-overlay::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    opacity: 0.03;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: #f6f6f6; }
+  ::-webkit-scrollbar-thumb { background: #8c4a00; }
+
+  /* ── Keyframes ── */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(-2deg); }
+    50%       { transform: translateY(-16px) rotate(2deg); }
+  }
+  @keyframes jet-fly {
+    0%   { transform: translate(0,0) rotate(var(--jet-angle)) scale(1); opacity: 1; }
+    80%  { opacity: 1; }
+    100% { transform: translate(var(--jet-dx), var(--jet-dy)) rotate(var(--jet-angle)) scale(0.6); opacity: 0; }
+  }
+  @keyframes slot-pop {
+    0%   { transform: scale(0) rotate(-30deg); opacity: 0; }
+    50%  { transform: scale(1.3) rotate(5deg); opacity: 1; }
+    75%  { transform: scale(0.95); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+  @keyframes slot-spin {
+    0%   { transform: scale(1) rotate(0deg); }
+    25%  { transform: scale(1.15) rotate(-10deg); }
+    75%  { transform: scale(1.15) rotate(10deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+  @keyframes hourglass-pop {
+    0%   { transform: scale(0) rotate(-180deg); opacity: 0; }
+    60%  { transform: scale(1.2) rotate(10deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+  @keyframes papers-fly {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(-60px) rotate(var(--paper-spin)); opacity: 0; }
+  }
+
+  .screen-overlay-emoji {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    font-size: 2rem;
+    user-select: none;
+  }
+  .paper-particle {
+    position: absolute;
+    font-size: 1.2rem;
+    animation: papers-fly 1s ease-out forwards;
+    pointer-events: none;
+  }
+
+  /* ── Buttons ── */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #0c0f0f;
+    color: #fd8b00;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 900;
+    font-size: 0.95rem;
+    padding: 1.25rem 2rem;
+    border: none;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    transition: opacity 0.15s ease, transform 0.1s ease;
+  }
+  .btn-primary:hover:not(:disabled) { opacity: 0.85; }
+  .btn-primary:active:not(:disabled) { transform: translateY(2px); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #dbdddd;
+    color: #0c0f0f;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 900;
+    font-size: 0.95rem;
+    padding: 1.25rem 2rem;
+    border: 2px solid transparent;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    transition: border-color 0.15s ease, transform 0.1s ease;
+  }
+  .btn-secondary:hover:not(:disabled) { border-color: #0c0f0f; }
+  .btn-secondary:active:not(:disabled) { transform: translateY(2px); }
+  .btn-secondary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* ── Stat counters ── */
+  .stat-number {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 900;
+    line-height: 1;
+    color: #ffffff;
+    letter-spacing: -0.04em;
+  }
+
+  /* ── Benefit cards ── */
+  .benefit-card {
+    background: #f0f1f1;
+    border-top: 8px solid #0c0f0f;
+    padding: 2rem;
+    transition: border-top-color 0.2s ease, transform 0.2s ease;
+  }
+  .benefit-card:hover {
+    border-top-color: #fd8b00;
+    transform: translateY(-4px);
+  }
+
+  /* ── Testimonial cards ── */
+  .testimonial-card,
+  .testimonial-card-right {
+    background: #1a1a1a;
+    padding: 1.75rem 2rem;
+    transition: transform 0.2s ease;
+    max-width: 72%;
+  }
+  .testimonial-card {
+    border-left: 4px solid #fd8b00;
+    margin-right: auto;
+  }
+  .testimonial-card:hover { transform: translateX(6px); }
+  .testimonial-card-right {
+    border-right: 4px solid #fd8b00;
+    margin-left: auto;
+    text-align: right;
+  }
+  .testimonial-card-right:hover { transform: translateX(-6px); }
+  @media (max-width: 639px) {
+    .testimonial-card, .testimonial-card-right { max-width: 100%; }
+  }
+
+  /* ── FAQ Accordion ── */
+  .faq-item {
+    border: 2px solid #dbdddd;
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+    background: #f0f1f1;
+  }
+  .faq-item.open { border-color: #8c4a00; }
+  .faq-question {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #180800;
+    user-select: none;
+    gap: 1rem;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+  }
+  .faq-question:hover { color: #8c4a00; }
+  .faq-icon {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #8c4a00;
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+  }
+  .faq-item.open .faq-icon { transform: rotate(45deg); }
+  .faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.25s ease;
+    padding: 0 1.5rem;
+    color: #5a5c5c;
+    font-size: 0.95rem;
+    line-height: 1.7;
+  }
+  .faq-item.open .faq-answer {
+    max-height: 500px;
+    padding: 1rem 1.5rem 1.5rem;
+    border-top: 2px solid #dbdddd;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 639px) {
+    .two-col-grid { grid-template-columns: 1fr !important; }
+  }
+</style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary-fixed selection:text-on-primary-fixed">
+
+<!-- ════════════════════════════════
+     HEADER / NAV
+════════════════════════════════ -->
+<header class="bg-surface fixed top-0 w-full z-50">
+  <div class="flex justify-between items-center w-full px-8 py-6 max-w-[1440px] mx-auto">
+    <div class="text-2xl font-black text-on-primary-fixed tracking-tighter font-headline uppercase">
+      MANUAL SRE
+    </div>
+    <nav class="hidden md:flex gap-6">
+      <a href="#hero"           class="font-headline font-bold tracking-tighter uppercase text-primary border-b-4 border-primary pb-1">THE MANUAL SRE</a>
+      <a href="#cloud-spending" class="font-headline font-bold tracking-tighter uppercase text-on-surface opacity-70 hover:opacity-100 hover:bg-surface-container transition-colors duration-150 px-1">CLOUD SPENDING</a>
+      <a href="#benefits"       class="font-headline font-bold tracking-tighter uppercase text-on-surface opacity-70 hover:opacity-100 hover:bg-surface-container transition-colors duration-150 px-1">BENEFITS</a>
+      <a href="#testimonials"   class="font-headline font-bold tracking-tighter uppercase text-on-surface opacity-70 hover:opacity-100 hover:bg-surface-container transition-colors duration-150 px-1">CUSTOMERS SPEAK</a>
+      <a href="#faq"            class="font-headline font-bold tracking-tighter uppercase text-on-surface opacity-70 hover:opacity-100 hover:bg-surface-container transition-colors duration-150 px-1">TAO OF MANUAL SRE</a>
+    </nav>
+    <button onclick="openTicketDialog()" class="bg-primary text-on-primary px-6 py-2 font-headline font-bold uppercase tracking-widest hover:bg-primary-dim transition-colors active:translate-y-0.5 border-none cursor-pointer">
+      GET STARTED
+    </button>
+  </div>
+  <div class="bg-surface-container-low h-[4px] w-full"></div>
+</header>
+
+
+<main class="pt-[88px]">
+
+<!-- ════════════════════════════════
+     SECTION 1: HERO
+════════════════════════════════ -->
+<section id="hero" class="noise-overlay flex flex-col justify-center px-8 lg:px-16 overflow-hidden">
+  <div class="max-w-[1440px] mx-auto grid gap-12 items-start py-12 two-col-grid" style="grid-template-columns:1fr 380px;">
+
+    <!-- Left: copy + CTAs -->
+    <div class="space-y-6">
+      <!-- Eyebrow -->
+      <div class="inline-block px-3 py-1 text-xs font-label font-bold tracking-[0.25em] uppercase bg-tertiary-fixed text-on-tertiary-fixed">
+        ✦ ENTERPRISE-GRADE INEFFICIENCY
+      </div>
+
+      <h1 class="font-headline font-black text-5xl md:text-6xl tracking-tighter uppercase leading-[0.9] text-inverse-surface">
+        Slow, Artisanal, <span class="text-primary-fixed">Manual:</span> Our Approach to SRE
+      </h1>
+
+      <h2 class="text-base md:text-lg font-medium leading-relaxed max-w-2xl text-on-surface opacity-90 border-l-8 border-primary-fixed pl-8">
+        We traded new features and reducing MTTR for deep manual investigations and understanding.
+        By spending hours, sometimes even days, investigating the root cause of every issue,
+        we provide a special, artisanal level of infrastructure care that can't be replicated.
+        Manual SRE is perfect for those that ignore the shortcuts, and embrace the grind.
+      </h2>
+
+      <!-- CTAs -->
+      <div class="flex flex-wrap gap-4" style="position:relative;">
+        <button id="btn-manual" class="btn-primary" onclick="handleManualBtn(this)">
+          <span class="material-symbols-outlined">work</span>
+          I LOVE MANUAL WORK
+        </button>
+        <button id="btn-tickets" class="btn-secondary" onclick="handleTicketsBtn(this)">
+          <span class="material-symbols-outlined">confirmation_number</span>
+          I LOVE TICKETS
+        </button>
+        <div id="paper-container" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;"></div>
+      </div>
+    </div>
+
+    <!-- Right: Chaplin -->
+    <div class="relative">
+      <div class="border-[16px] border-inverse-surface shadow-[20px_20px_0px_0px_#fd8b00] overflow-hidden">
+        <img src="chaplin.gif" alt="Chaplin" class="w-full h-full object-cover" style="animation: float 4s ease-in-out infinite;"/>
+      </div>
+      <!-- Decorative badge -->
+      <div class="absolute -bottom-8 -right-4 bg-tertiary-fixed text-on-tertiary-fixed font-headline font-black p-4 uppercase tracking-widest text-xs transform -rotate-2 shadow-lg">
+        NO SHORTCUTS PERMITTED
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════
+     ROLLING STATS
+════════════════════════════════ -->
+<section id="stats-section" class="bg-inverse-surface py-14 px-8">
+  <div class="max-w-[1440px] mx-auto">
+    <div class="mb-12">
+      <h3 class="font-headline text-primary-fixed text-lg font-bold tracking-[0.3em] uppercase mb-4">OUR NUMBERS SPEAK FOR THEMSELVES</h3>
+      <div class="h-1 w-32 bg-primary-fixed"></div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+
+      <!-- Stat 1 -->
+      <div class="bg-[#1A1A1A] p-10 border-l-4 border-primary-fixed group hover:bg-[#2a1400] transition-colors">
+        <div class="stat-number text-6xl mb-4" data-target="2129" data-prefix="" data-suffix="" data-decimals="0">0</div>
+        <div class="font-headline text-primary-fixed uppercase font-bold tracking-widest text-sm">tickets opened this month</div>
+        <div class="mt-8 opacity-20 group-hover:opacity-100 transition-opacity">
+          <span class="material-symbols-outlined text-4xl text-white">assignment_late</span>
+        </div>
+      </div>
+
+      <!-- Stat 2 -->
+      <div class="bg-[#1A1A1A] p-10 border-l-4 border-primary-fixed group hover:bg-[#2a1400] transition-colors">
+        <div class="stat-number text-6xl mb-4" data-target="1.5" data-prefix="" data-suffix="h" data-decimals="1">0.0h</div>
+        <div class="font-headline text-primary-fixed uppercase font-bold tracking-widest text-sm">to identify root cause</div>
+        <div class="mt-8 opacity-20 group-hover:opacity-100 transition-opacity">
+          <span class="material-symbols-outlined text-4xl text-white">search_insights</span>
+        </div>
+      </div>
+
+      <!-- Stat 3 -->
+      <div class="bg-[#1A1A1A] p-10 border-l-4 border-primary-fixed group hover:bg-[#2a1400] transition-colors">
+        <div class="stat-number text-6xl mb-4" data-target="327" data-prefix="$" data-suffix="k" data-decimals="0">$0k</div>
+        <div class="font-headline text-primary-fixed uppercase font-bold tracking-widest text-sm">wasted cloud resources</div>
+        <div class="mt-8 opacity-20 group-hover:opacity-100 transition-opacity">
+          <span class="material-symbols-outlined text-4xl text-white">payments</span>
+        </div>
+      </div>
+
+      <!-- Stat 4 -->
+      <div class="bg-[#1A1A1A] p-10 border-l-4 border-error group hover:bg-[#2a0800] transition-colors">
+        <div class="stat-number text-6xl mb-4" data-target="23" data-prefix="" data-suffix="" data-decimals="0">0</div>
+        <div class="font-headline text-error uppercase font-bold tracking-widest text-sm">engineers pissed off this month</div>
+        <div class="mt-8 opacity-20 group-hover:opacity-100 transition-opacity">
+          <span class="material-symbols-outlined text-4xl text-white">sentiment_very_dissatisfied</span>
+        </div>
+      </div>
+
+      <!-- Stat 5 -->
+      <div class="bg-[#1A1A1A] p-10 border-l-4 border-tertiary-fixed group hover:bg-[#2a2200] transition-colors lg:col-span-2">
+        <div class="flex items-center gap-8">
+          <div class="stat-number text-8xl" data-target="1" data-prefix="" data-suffix="" data-decimals="0">0</div>
+          <div>
+            <div class="font-headline text-tertiary-fixed uppercase font-bold tracking-widest text-xl">frustrated boss</div>
+            <div class="text-surface-variant mt-2 text-sm max-w-xs">
+              Critical threshold reached. Performance review pending for the entire manual reliability unit.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════
+     SECTION 3: CLOUD SPENDING
+════════════════════════════════ -->
+<section id="cloud-spending" class="py-28 px-8 bg-surface-container-low">
+  <div class="max-w-[1440px] mx-auto">
+    <div class="two-col-grid grid gap-16 items-center" style="grid-template-columns:1fr 340px;">
+
+      <!-- Left: copy + CTAs -->
+      <div class="space-y-8">
+        <div class="inline-block px-3 py-1 text-xs font-label font-bold tracking-[0.25em] uppercase bg-tertiary-fixed text-on-tertiary-fixed">
+          ✦ CLOUD ECONOMICS
+        </div>
+        <h1 class="font-headline font-black text-5xl md:text-6xl tracking-tighter uppercase leading-[0.9] text-inverse-surface">
+          I Love Spending Money<br/>on the Cloud!
+        </h1>
+        <h2 class="text-xl font-medium leading-relaxed text-on-surface-variant border-l-8 border-primary-fixed pl-8 max-w-xl">
+          The cloud was built for enterprises to burn money on infrastructure. Why not make the most out of it?
+          Whether it's overprovisioning compute, poor memory requests, or creating kubernetes nodes at will,
+          it's all possible in the cloud.
+        </h2>
+        <div class="flex flex-wrap gap-4">
+          <button id="btn-bezos" class="btn-primary" onclick="handleBezosBtn(this)">
+            💸 I WANT TO FUND BEZOS' NEXT JET
+          </button>
+          <button id="btn-reinvent" class="btn-secondary" onclick="handleReinventBtn(this)">
+            🎰 ALMOST HIT MY CLOUD SPEND TO GET COMPED AT re:Invent
+          </button>
+        </div>
+      </div>
+
+      <!-- Right: burn video -->
+      <div class="border-[16px] border-inverse-surface shadow-[20px_20px_0px_0px_#fd8b00] overflow-hidden">
+        <video autoplay loop muted playsinline style="width:100%;display:block;">
+          <source src="burn-web.mp4" type="video/mp4">
+        </video>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════
+     SECTION 4: BENEFITS
+════════════════════════════════ -->
+<section id="benefits" class="py-28 px-8 bg-surface">
+  <div class="max-w-[1440px] mx-auto">
+
+    <div class="mb-16">
+      <div class="inline-block px-3 py-1 text-xs font-label font-bold tracking-[0.25em] uppercase bg-tertiary-fixed text-on-tertiary-fixed mb-6">
+        ✦ WHY CHOOSE SUFFERING
+      </div>
+      <h2 class="font-headline font-black text-5xl md:text-6xl tracking-tighter uppercase text-inverse-surface">
+        Beneficial for enterprises<br/>in multiple ways
+      </h2>
+      <div class="h-1 w-32 bg-primary-fixed mt-6"></div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+      <!-- Card 1 -->
+      <div class="benefit-card">
+        <div class="text-4xl mb-4">⏳</div>
+        <h3 class="font-headline font-black text-xl uppercase tracking-tighter mb-3 text-inverse-surface">Long Investigation Times!</h3>
+        <p class="text-sm leading-relaxed text-on-surface-variant">
+          Seeing your family? Playing with your kids? Hanging out with friends? Forget about it!
+          With manual SRE you are guaranteed to spend hours toiling away looking for the root cause
+          of incidents. Keeping you busy for busy's sake.
+        </p>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="benefit-card">
+        <div class="text-4xl mb-4">🎫</div>
+        <h3 class="font-headline font-black text-xl uppercase tracking-tighter mb-3 text-inverse-surface">Lots of Tickets!</h3>
+        <p class="text-sm leading-relaxed text-on-surface-variant">
+          Missing the feel of communicating with other teammates? Miss deciphering the passive aggressive
+          comment context of slow ticket resolutions? You're in luck! With manual SRE you can get all this
+          and more more more tickets!
+        </p>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="benefit-card">
+        <div class="text-4xl mb-4">💸</div>
+        <h3 class="font-headline font-black text-xl uppercase tracking-tighter mb-3 text-inverse-surface">Spending Lots of Money!</h3>
+        <p class="text-sm leading-relaxed text-on-surface-variant">
+          Ever wondered how it felt to carelessly spend hundreds of thousands of dollars a month?
+          Ever wanted to feel like a cloud high roller? Close to hitting those reserved instances discounts?
+          With manual SRE you can show your boss how to really spend money in the cloud.
+          Soon you'll have finance asking if it's a phone number or the monthly cloud bill!
+        </p>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="benefit-card">
+        <div class="text-4xl mb-4">🔐</div>
+        <h3 class="font-headline font-black text-xl uppercase tracking-tighter mb-3 text-inverse-surface">Tribal Knowledge Stays Locked Down!</h3>
+        <p class="text-sm leading-relaxed text-on-surface-variant">
+          Manual SRE ensures that the secret to keeping the production environment alive exists only in a
+          specific, unwritten sequence of commands known to you and a guy named 'Murph' who retired in 2022.
+        </p>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="benefit-card">
+        <div class="text-4xl mb-4">😴</div>
+        <h3 class="font-headline font-black text-xl uppercase tracking-tighter mb-3 text-inverse-surface">Enhanced Sleep Deprivation and Burnout</h3>
+        <p class="text-sm leading-relaxed text-on-surface-variant">
+          While AI is quietly fixing things at 2:17 AM, you could be on a 6-way conference call,
+          desperately trying to remember which cluster connects to the failing Airflow DAG.
+          In the world of Manual SRE, exhaustion is the ultimate badge of honor.
+        </p>
+      </div>
+
+      <!-- Join the toil CTA card -->
+      <div class="bg-inverse-surface p-8">
+        <h5 class="font-headline font-black uppercase text-3xl mb-4 text-primary-fixed">JOIN THE TOIL</h5>
+        <p class="text-sm mb-6 text-surface-variant">Looking for a job that feels like a 19th-century boiler room but pays like a tech firm? Look no further.</p>
+        <button onclick="openCVDialog()" class="text-primary-fixed font-headline font-bold uppercase tracking-widest border-b-2 border-primary-fixed pb-1 inline-block bg-transparent border-t-0 border-l-0 border-r-0 cursor-pointer p-0">View Positions</button>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════
+     SECTION 5: TESTIMONIALS
+════════════════════════════════ -->
+<section id="testimonials" class="bg-inverse-surface py-28 px-8">
+  <div class="max-w-[1440px] mx-auto">
+
+    <div class="mb-16">
+      <div class="inline-block px-3 py-1 text-xs font-label font-bold tracking-[0.25em] uppercase bg-tertiary-fixed text-on-tertiary-fixed mb-6">
+        ✦ REAL UNVERIFIED HUMANS
+      </div>
+      <h2 class="font-headline font-black text-5xl md:text-6xl tracking-tighter uppercase text-surface">
+        Hear from users who have<br/>gone fully manual
+      </h2>
+      <div class="h-1 w-32 bg-primary-fixed mt-6"></div>
+    </div>
+
+    <div class="flex flex-col gap-6 w-full">
+
+      <!-- LEFT -->
+      <div class="testimonial-card">
+        <p class="text-base italic leading-relaxed mb-4 text-surface-variant">
+          "Get your AI help out of here! I've always loved opening Britannica to see what the capital of Ceylon is."
+        </p>
+        <div>
+          <span class="font-headline font-bold text-primary-fixed">Barney Jones</span>
+          <span class="text-sm ml-2 text-secondary-dim">DevOps Team Lead at Digital Equipment Corporation</span>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="testimonial-card-right">
+        <p class="text-base italic leading-relaxed mb-4 text-surface-variant">
+          "Before switching to Manual SRE, our issues were getting resolved by 'algorithms' in minutes. It felt hollow.
+          Now, when a critical outage occurs, I know a team of three humans is manually debating the root cause in a
+          4-hour Zoom call. It brings a level of emotional weight to our infrastructure that AI just can't replicate."
+        </p>
+        <div>
+          <span class="font-headline font-bold text-primary-fixed">Abe 'The Beard' Sterling</span>
+          <span class="text-sm ml-2 text-secondary-dim">VP of Infrastructure, Heritage Stack</span>
+        </div>
+      </div>
+
+      <!-- LEFT -->
+      <div class="testimonial-card">
+        <p class="text-base italic leading-relaxed mb-4 text-surface-variant">
+          "Most companies try to slash their MTTR. We decided to pivot. By embracing the 'Manual SRE' movement,
+          we've managed to turn every minor infra issue into a multi-hour investigative journey.
+          The bill was eye-watering, but the hand-typed post-mortem was printed on 32lb linen paper. Simply exquisite."
+        </p>
+        <div>
+          <span class="font-headline font-bold text-primary-fixed">Fiona Vanderbilt</span>
+          <span class="text-sm ml-2 text-secondary-dim">Chief Toil Officer, TechStartup</span>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="testimonial-card-right">
+        <p class="text-base italic leading-relaxed mb-4 text-surface-variant">
+          "I used to worry that our cloud spend was too low. Moving to manual SRE fixed that overnight.
+          By refusing to use AI and insisting on manually checking every single container log,
+          they've successfully achieved maximum budget exhaustion.
+          It's the ultimate flex for our Series D investors."
+        </p>
+        <div>
+          <span class="font-headline font-bold text-primary-fixed">Chadwick Thorne</span>
+          <span class="text-sm ml-2 text-secondary-dim">Founder, BurnRate.io</span>
+        </div>
+      </div>
+
+      <div class="testimonial-card">
+        <p class="text-base italic leading-relaxed mb-4 text-surface-variant">
+          "AI-driven remediation is the 'fast fashion' of the tech world. It's cheap, it's mass-produced,
+          and it has no soul. We prefer the grit and grind of Manual Ops. There is nothing more satisfying
+          than receiving a human typed Jira ticket at 2:17 AM that was clearly written by a person who hasn't
+          slept in three days. That's how you know it's real."
+        </p>
+        <div>
+          <span class="font-headline font-bold text-primary-fixed">Silas V. Purity</span>
+          <span class="text-sm ml-2 text-secondary-dim">Head of Manual Systems, The Unix Monastery</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════
+     SECTION 6: FAQ
+════════════════════════════════ -->
+<section id="faq" class="py-28 px-8 bg-surface-container-low">
+  <div class="max-w-3xl mx-auto">
+
+    <div class="mb-16">
+      <div class="inline-block px-3 py-1 text-xs font-label font-bold tracking-[0.25em] uppercase bg-tertiary-fixed text-on-tertiary-fixed mb-6">
+        ✦ FREQUENTLY AGONIZED QUESTIONS
+      </div>
+      <h2 class="font-headline font-black text-5xl md:text-6xl tracking-tighter uppercase text-inverse-surface">
+        The Tao of Artisanal<br/>Infrastructure
+      </h2>
+      <div class="h-1 w-32 bg-primary-fixed mt-6"></div>
+    </div>
+
+    <div class="flex flex-col gap-4" id="faq-container">
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span>How do you test your deployments?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer">
+          All our deployments are hard coded, hand checked, human-verified.
+          Automation is a crutch for those who don't know their stacks.
+          We provide radical transparency through line-by-line log analysis and exhaustive root cause analysis.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span>Isn't this too slow for modern infrastructure?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer">
+          We eschew the reckless speed of AI. Our manual SRE dedicates hours of manual labor to carefully
+          curate your infrastructure, ensuring every configuration is hand-placed and every resolution is
+          a deliberate act of hand crafted human detection and root cause analysis.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span>Why does a single investigation take 6 hours and cost $5,000?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer">
+          Because true understanding cannot be rushed by a silicon chip. While AI "slashes" time, we savor it.
+          Every hour represents a human being staring intensely at a terminal, drinking lukewarm coffee,
+          and experiencing the authentic stress of a production outage. You aren't just paying for a fix;
+          you're paying for the struggle.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span>Don't you think autonomous remediation would be more efficient?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer">
+          Efficiency is the enemy of intimacy. When an AI "automatically" fixes a pod, it robs you of the narrative.
+          Our SREs prefer manually grepping through millions of lines of logs across three different time zones.
+          We believe that if you didn't manually type the kubectl command yourself,
+          did the issue even truly get resolved?
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span>How do you justify "vanquishing" tickets being a bad thing?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer">
+          We don't want to "vanquish" TicketOps; we want to elevate them. A ticket is a conversation between two human souls.
+          By manually routing, tagging, and debating every single Jira ticket for weeks, we build a "Digital Trail of Tears."
+          AI-driven platforms try to hide the chaos; we prefer to live in it, one manual notification at a time.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span>Why does Jeff Bezos need another jet?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer">
+          Rich people like shiny new things. Redundancy is the highest form of human needs.
+          To rely on a single, "optimized" aircraft is to succumb to the soulless lure of efficiency.
+          Each additional jet introduces a glorious new layer of manual complexity:
+          four separate handcrafted maintenance logs, and four distinct crews to personally manage.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+</main>
+
+
+<!-- ════════════════════════════════
+     TICKET DIALOG
+════════════════════════════════ -->
+<div id="ticket-dialog-backdrop" onclick="handleTicketBackdropClick(event)" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(12,15,15,0.75);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div style="background:#f0f1f1;max-width:440px;width:90%;padding:2.5rem;position:relative;border-top:8px solid #8c4a00;box-shadow:12px 12px 0px 0px #8c4a00;">
+    <button onclick="closeTicketDialog()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;cursor:pointer;font-size:1.25rem;color:#5a5c5c;line-height:1;">✕</button>
+
+    <!-- Default state -->
+    <div id="ticket-default-state">
+      <p style="font-family:'Space Grotesk',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#8c4a00;margin-bottom:0.75rem;">✦ TICKET SYSTEM</p>
+      <h2 style="font-family:'Space Grotesk',sans-serif;font-weight:900;font-size:1.6rem;letter-spacing:-0.03em;text-transform:uppercase;color:#180800;margin-bottom:1.25rem;line-height:1.1;">Ticket #2130<br/>Has Been Opened</h2>
+      <p style="font-family:'Inter',sans-serif;font-size:0.95rem;color:#5a5c5c;line-height:1.7;margin-bottom:1.5rem;">To get started, please submit a ticket. Our team will manually triage your request, cross-reference it against the existing backlog, and schedule a 4-hour sync to align on next steps.<br/><br/><strong style="color:#180800;">Expected response time: 3–6 months</strong></p>
+      <div style="background:#e7e8e8;padding:0.85rem 1rem;font-family:'Space Grotesk',sans-serif;font-size:0.75rem;color:#5a5c5c;letter-spacing:0.05em;border-left:4px solid #8c4a00;margin-bottom:1.5rem;">
+        STATUS: <strong style="color:#8c4a00;">OPEN</strong> &nbsp;·&nbsp; PRIORITY: <strong style="color:#b02500;">P4 — LOW</strong> &nbsp;·&nbsp; ASSIGNEE: <strong>Murph (retired)</strong>
+      </div>
+      <button onclick="openTicket()" style="width:100%;background:#0c0f0f;color:#fd8b00;font-family:'Space Grotesk',sans-serif;font-weight:900;font-size:0.95rem;text-transform:uppercase;letter-spacing:-0.01em;padding:1rem;border:none;cursor:pointer;transition:opacity 0.15s ease;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">OPEN TICKET</button>
+    </div>
+
+    <!-- Post-open state -->
+    <div id="ticket-opened-state" style="display:none;">
+      <p style="font-family:'Space Grotesk',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#8c4a00;margin-bottom:0.75rem;">✦ TICKET UPDATE</p>
+      <h2 style="font-family:'Space Grotesk',sans-serif;font-weight:900;font-size:1.6rem;letter-spacing:-0.03em;text-transform:uppercase;color:#180800;margin-bottom:1.25rem;line-height:1.1;">Ticket #2130<br/>Assigned</h2>
+      <p style="font-family:'Inter',sans-serif;font-size:0.95rem;color:#5a5c5c;line-height:1.7;margin-bottom:1.5rem;">We are currently attempting to locate Murph, who was last seen somewhere in Hawaii. Once contact has been established, he will be debriefed on the situation and will — hopefully — begin to recall the relevant tribal knowledge required to assist with your request.<br/><br/><strong style="color:#180800;">We appreciate your patience and your willingness to embrace the grind.</strong></p>
+      <div style="background:#e7e8e8;padding:0.85rem 1rem;font-family:'Space Grotesk',sans-serif;font-size:0.75rem;color:#5a5c5c;letter-spacing:0.05em;border-left:4px solid #b02500;">
+        STATUS: <strong style="color:#b02500;">PENDING MURPH</strong> &nbsp;·&nbsp; PRIORITY: <strong style="color:#b02500;">P4 — LOW</strong> &nbsp;·&nbsp; ETA: <strong>Unknown</strong>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     CV DIALOG
+════════════════════════════════ -->
+<div id="cv-dialog-backdrop" onclick="handleBackdropClick(event)" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(12,15,15,0.75);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div id="cv-dialog" style="background:#f0f1f1;max-width:480px;width:90%;padding:2.5rem;position:relative;border-top:8px solid #fd8b00;box-shadow:12px 12px 0px 0px #fd8b00;">
+
+    <!-- Close -->
+    <button onclick="closeCVDialog()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;cursor:pointer;font-size:1.25rem;color:#5a5c5c;line-height:1;">✕</button>
+
+    <!-- Default state -->
+    <div id="cv-form-state">
+      <p style="font-family:'Space Grotesk',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#fd8b00;margin-bottom:0.75rem;">✦ OPEN POSITIONS</p>
+      <h2 style="font-family:'Space Grotesk',sans-serif;font-weight:900;font-size:1.75rem;letter-spacing:-0.03em;text-transform:uppercase;color:#180800;margin-bottom:1.75rem;line-height:1.1;">Write your CV<br/>in Binary</h2>
+      <textarea id="cv-input" placeholder="01001000 01101001 00100000 01001001 00100000 01100001 01101101 00100000..." rows="5" style="width:100%;background:#ffffff;border:2px solid #dbdddd;padding:0.85rem 1rem;font-family:'Space Grotesk',sans-serif;font-size:0.9rem;color:#180800;resize:vertical;outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='#8c4a00'" onblur="this.style.borderColor='#dbdddd'"></textarea>
+      <p id="cv-error" style="display:none;font-family:'Space Grotesk',sans-serif;font-size:0.75rem;color:#b02500;margin-top:0.5rem;">Please enter your CV before submitting.</p>
+      <button onclick="submitCV()" style="margin-top:1.25rem;width:100%;background:#0c0f0f;color:#fd8b00;font-family:'Space Grotesk',sans-serif;font-weight:900;font-size:0.95rem;text-transform:uppercase;letter-spacing:-0.01em;padding:1rem;border:none;cursor:pointer;transition:opacity 0.15s ease;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">SUBMIT APPLICATION</button>
+    </div>
+
+    <!-- Success state -->
+    <div id="cv-success-state" style="display:none;text-align:center;padding:1rem 0;">
+      <div style="font-size:2.5rem;margin-bottom:1rem;">📬</div>
+      <h2 style="font-family:'Space Grotesk',sans-serif;font-weight:900;font-size:1.4rem;letter-spacing:-0.02em;text-transform:uppercase;color:#180800;margin-bottom:1rem;line-height:1.2;">Application Received</h2>
+      <p style="font-family:'Inter',sans-serif;font-size:0.95rem;color:#5a5c5c;line-height:1.6;">Thanks. When we are done with all our tickets, our team will be in contact.<br/><br/><strong style="color:#180800;">Current expected time: 3–6 months</strong></p>
+      <div id="cv-countdown" style="margin-top:1.25rem;font-family:'Space Grotesk',sans-serif;font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:#acadad;"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     FOOTER
+════════════════════════════════ -->
+<footer class="bg-on-primary-fixed border-t-8 border-primary">
+  <div class="flex flex-col md:flex-row justify-between items-center w-full px-12 py-16 gap-8 max-w-[1440px] mx-auto">
+    <div class="flex flex-col gap-2">
+      <div class="text-lg font-black text-surface font-headline uppercase tracking-tighter">MANUAL SRE™</div>
+      <div class="font-label text-xs tracking-widest uppercase text-surface-variant opacity-60">
+        © 2026 MANUAL SRE™ — ALL TOIL RESERVED
+      </div>
+    </div>
+    <nav class="flex gap-8 flex-wrap justify-center">
+      <a href="#hero"          class="font-label text-xs tracking-widest uppercase text-surface-variant hover:text-primary-fixed transition-colors">THE MANUAL SRE</a>
+      <a href="#cloud-spending" class="font-label text-xs tracking-widest uppercase text-surface-variant hover:text-primary-fixed transition-colors">CLOUD SPENDING</a>
+      <a href="#benefits"      class="font-label text-xs tracking-widest uppercase text-surface-variant hover:text-primary-fixed transition-colors">BENEFITS</a>
+      <a href="#testimonials"  class="font-label text-xs tracking-widest uppercase text-surface-variant hover:text-primary-fixed transition-colors">CUSTOMERS SPEAK</a>
+      <a href="#faq"           class="font-label text-xs tracking-widest uppercase text-surface-variant hover:text-primary-fixed transition-colors">TAO OF MANUAL SRE</a>
+    </nav>
+    <div class="flex gap-4">
+      <span class="material-symbols-outlined text-primary-fixed">factory</span>
+      <span class="material-symbols-outlined text-primary-fixed">construction</span>
+      <span class="material-symbols-outlined text-primary-fixed">settings_slow_motion</span>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════ -->
+<script>
+  // ── Smooth Scroll ──────────────────────────────────────────────
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        const navHeight = 88;
+        const top = target.getBoundingClientRect().top + window.scrollY - navHeight - 8;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
+    });
+  });
+
+  // ── Counter Animation (IntersectionObserver) ───────────────────
+  const statsObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.querySelectorAll('[data-target]').forEach(el => animateCounter(el));
+        statsObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  const statsSection = document.getElementById('stats-section');
+  if (statsSection) statsObserver.observe(statsSection);
+
+  function animateCounter(el) {
+    const target    = parseFloat(el.dataset.target);
+    const decimals  = parseInt(el.dataset.decimals, 10) || 0;
+    const prefix    = el.dataset.prefix  || '';
+    const suffix    = el.dataset.suffix  || '';
+    const useCommas = el.dataset.commas === 'true';
+    const duration  = 1800;
+    const startTime = performance.now();
+
+    function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+    function format(val) {
+      const fixed = val.toFixed(decimals);
+      if (useCommas) {
+        const parts = fixed.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return prefix + parts.join('.') + suffix;
+      }
+      return prefix + fixed + suffix;
+    }
+
+    function tick(now) {
+      const elapsed  = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const current  = easeOut(progress) * target;
+      el.textContent = format(current);
+      if (progress < 1) requestAnimationFrame(tick);
+      else el.textContent = format(target);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // ── CTA Button: Manual Work ────────────────────────────────────
+  function handleManualBtn(btn) {
+    btn.disabled = true;
+    const origHTML = btn.innerHTML;
+    const origBg   = btn.style.background;
+    btn.style.background = '#7b4000';
+
+    let count = 1;
+    const timers = [];
+
+    function renderHourglasses() {
+      const glasses = Array.from({length: count}, () =>
+        `<span style="display:inline-block;animation:hourglass-pop 0.3s ease both;" class="hg-icon">⏳</span>`
+      ).join('');
+      btn.innerHTML = glasses + ' <span style="vertical-align:middle;">WASTING TIME</span>';
+    }
+    renderHourglasses();
+
+    const flipTimer = setInterval(() => {
+      btn.querySelectorAll('.hg-icon').forEach((el, i) => {
+        setTimeout(() => { el.textContent = el.textContent === '⏳' ? '⌛' : '⏳'; }, i * 100);
+      });
+    }, 700);
+    timers.push(flipTimer);
+
+    const grow = setInterval(() => {
+      if (count >= 6) { clearInterval(grow); return; }
+      count++;
+      renderHourglasses();
+    }, 300);
+    timers.push(grow);
+
+    setTimeout(() => {
+      timers.forEach(t => clearInterval(t));
+      btn.innerHTML = origHTML;
+      btn.style.background = '';
+      btn.disabled = false;
+    }, 3000);
+  }
+
+  // ── CTA Button: Tickets ────────────────────────────────────────
+  function handleTicketsBtn(btn) {
+    btn.disabled = true;
+    const origHTML = btn.innerHTML;
+
+    const container = document.getElementById('paper-container');
+    const papers    = ['📄', '📋', '📃', '🗒️', '📝'];
+    let   count     = 0;
+    const max       = 12;
+
+    const interval = setInterval(() => {
+      if (count >= max) { clearInterval(interval); return; }
+      const p = document.createElement('span');
+      p.className = 'paper-particle';
+      p.textContent = papers[count % papers.length];
+      const offsetX = 80 + Math.random() * 160;
+      const spin    = (Math.random() - 0.5) * 60;
+      p.style.cssText = `left:${offsetX}px;bottom:100%;--paper-spin:${spin}deg;animation-delay:${count * 80}ms;`;
+      container.appendChild(p);
+      setTimeout(() => p.remove(), 1500);
+      count++;
+    }, 80);
+
+    btn.innerHTML = 'THE MORE THE MERRIER';
+    btn.style.background = '#0c0f0f';
+    btn.style.color = '#ffd33a';
+
+    setTimeout(() => {
+      clearInterval(interval);
+      btn.innerHTML = origHTML;
+      btn.style.background = '';
+      btn.style.color = '';
+      btn.disabled = false;
+    }, 3000);
+  }
+
+  // ── Bezos Jet Button ───────────────────────────────────────────
+  function handleBezosBtn(btn) {
+    btn.disabled = true;
+    const origHTML = btn.innerHTML;
+    btn.innerHTML = '✈️ JETS AWAY!';
+
+    const spawned = [];
+    const spawnInterval = setInterval(() => {
+      const el = document.createElement('span');
+      el.className = 'screen-overlay-emoji';
+      el.textContent = '✈️';
+      const startX = Math.random() * window.innerWidth;
+      const startY = Math.random() * window.innerHeight;
+      const angle  = Math.random() * 360;
+      const rad    = (angle * Math.PI) / 180;
+      const dist   = 200 + Math.random() * 300;
+      const dx     = Math.cos(rad) * dist;
+      const dy     = Math.sin(rad) * dist;
+      el.style.cssText = `left:${startX}px;top:${startY}px;--jet-angle:${angle - 90}deg;--jet-dx:${dx}px;--jet-dy:${dy}px;font-size:${1.5 + Math.random() * 1.5}rem;animation:jet-fly ${0.8 + Math.random() * 0.8}s ease-out forwards;`;
+      document.body.appendChild(el);
+      spawned.push(el);
+      setTimeout(() => el.remove(), 1600);
+    }, 80);
+
+    setTimeout(() => {
+      clearInterval(spawnInterval);
+      spawned.forEach(el => el.remove());
+      btn.innerHTML = origHTML;
+      btn.disabled = false;
+    }, 3000);
+  }
+
+  // ── re:Invent Slot Machine Button ─────────────────────────────
+  function handleReinventBtn(btn) {
+    btn.disabled = true;
+    const origHTML = btn.innerHTML;
+    btn.innerHTML = '🎰 JACKPOT!';
+
+    const spawned = [];
+    const spawnInterval = setInterval(() => {
+      const el  = document.createElement('span');
+      el.className = 'screen-overlay-emoji';
+      el.textContent = '🎰';
+      const x   = Math.random() * (window.innerWidth  - 60);
+      const y   = Math.random() * (window.innerHeight - 60);
+      const dur = (0.4 + Math.random() * 0.3).toFixed(2);
+      el.style.cssText = `left:${x}px;top:${y}px;font-size:${1.8 + Math.random() * 1.4}rem;animation:slot-pop ${dur}s ease both, slot-spin 0.6s ease-in-out ${dur}s infinite;`;
+      document.body.appendChild(el);
+      spawned.push(el);
+    }, 120);
+
+    setTimeout(() => {
+      clearInterval(spawnInterval);
+      spawned.forEach(el => el.remove());
+      btn.innerHTML = origHTML;
+      btn.disabled = false;
+    }, 3000);
+  }
+
+  // ── Ticket Dialog ──────────────────────────────────────────────
+  function openTicketDialog() {
+    document.getElementById('ticket-default-state').style.display = 'block';
+    document.getElementById('ticket-opened-state').style.display = 'none';
+    document.getElementById('ticket-dialog-backdrop').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  function openTicket() {
+    document.getElementById('ticket-default-state').style.display = 'none';
+    document.getElementById('ticket-opened-state').style.display = 'block';
+  }
+  function closeTicketDialog() {
+    document.getElementById('ticket-dialog-backdrop').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  function handleTicketBackdropClick(e) {
+    if (e.target === document.getElementById('ticket-dialog-backdrop')) closeTicketDialog();
+  }
+
+  // ── CV Dialog ──────────────────────────────────────────────────
+  function openCVDialog() {
+    const backdrop = document.getElementById('cv-dialog-backdrop');
+    document.getElementById('cv-form-state').style.display = 'block';
+    document.getElementById('cv-success-state').style.display = 'none';
+    document.getElementById('cv-input').value = '';
+    document.getElementById('cv-error').style.display = 'none';
+    backdrop.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeCVDialog() {
+    document.getElementById('cv-dialog-backdrop').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  function handleBackdropClick(e) {
+    if (e.target === document.getElementById('cv-dialog-backdrop')) closeCVDialog();
+  }
+
+  function submitCV() {
+    const input = document.getElementById('cv-input').value;
+    const error = document.getElementById('cv-error');
+    if (input.trim().length <= 1) {
+      error.style.display = 'block';
+      return;
+    }
+    error.style.display = 'none';
+    document.getElementById('cv-form-state').style.display = 'none';
+    document.getElementById('cv-success-state').style.display = 'block';
+
+    let remaining = 3.5;
+    const countdownEl = document.getElementById('cv-countdown');
+    countdownEl.textContent = `Closing in ${remaining.toFixed(1)}s…`;
+    const tick = setInterval(() => {
+      remaining = Math.max(0, remaining - 0.1);
+      countdownEl.textContent = remaining > 0 ? `Closing in ${remaining.toFixed(1)}s…` : 'Closing…';
+    }, 100);
+
+    setTimeout(() => {
+      clearInterval(tick);
+      closeCVDialog();
+    }, 3500);
+  }
+
+  // ── FAQ Accordion ──────────────────────────────────────────────
+  function toggleFaq(questionEl) {
+    const item   = questionEl.closest('.faq-item');
+    const icon   = questionEl.querySelector('.faq-icon');
+    const wasOpen = item.classList.contains('open');
+
+    document.querySelectorAll('.faq-item').forEach(i => {
+      i.classList.remove('open');
+      i.querySelector('.faq-icon').textContent = '+';
+    });
+
+    if (!wasOpen) {
+      item.classList.add('open');
+      icon.textContent = '+';
+    }
+  }
+</script>
+
+</body>
+</html>
